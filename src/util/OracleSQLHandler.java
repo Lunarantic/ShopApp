@@ -16,13 +16,13 @@ public class ResultSetParser {
 		Class cls[] = new Class[metaData.getColumnCount()];
 		
 		
-		for (int i = 0; i < cls.length; ++i) {
+		for (int i = 0; i < cls.length;) {
 			switch (metaData.getColumnType(i)) {
 			case Types.BIGINT:
 			case Types.INTEGER:
 			case Types.TINYINT:
 			case Types.NUMERIC:
-				cls[i] = Integer.class;
+				cls[++i] = Integer.class;
 				break;
 				
 			case Types.VARCHAR:
@@ -51,11 +51,12 @@ public class ResultSetParser {
 		
 		Object[] initargs;
 		Class<?>[] res = new Class<?>[resultSet.getFetchSize()];
+		Constructor<?> const = obj.getConstructor(cls);
 		
-		for (int i = 0; i < res.length; ++i) {
+		for (int i = 1; resultSet.next(); ++i) {
 			initargs = new Object[cls.length];
-			for (int j = 0; j < cls.length; ++j) initargs[j] = resultSet.getObject(i+1, cls[i]);
-			res[i] = (Class<?>) obj.getConstructor(cls).newInstance(initargs);
+			for (int j = 0; j < cls.length; ++j) initargs[j] = resultSet.getObject(i, cls[j]);
+			res[i] = (Class<?>) const.newInstance(initargs);
 		}
 		
 		return res;
